@@ -1,0 +1,11 @@
+#!/bin/sh
+# Conventional Commits check, run by git for every commit message.
+# Enabled per clone with `make setup` (git config core.hooksPath .githooks).
+set -e
+
+root=$(git rev-parse --show-toplevel)
+
+# The subject is the first line that is neither blank nor a comment.
+subject=$(grep -v '^#' "$1" | sed -e 's/[[:space:]]*$//' | sed -e '/^$/d' | head -n 1 || true)
+
+printf '%s\n' "$subject" | "$root/scripts/check-commit-message.sh"

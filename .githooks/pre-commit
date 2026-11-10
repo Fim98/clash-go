@@ -1,0 +1,22 @@
+#!/bin/sh
+# Keeps every commit formatted and vet-clean. Fast enough to run on each commit.
+set -e
+
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+
+unformatted=$(git diff --cached --name-only --diff-filter=ACMR -- '*.go' |
+	while IFS= read -r file; do
+		[ -f "$file" ] && gofmt -l -- "$file"
+	done)
+
+if [ -n "$unformatted" ]; then
+	printf 'gofmt reported unformatted files:\n%s\n\nRun `make fmt` and stage the result.\n' "$unformatted" >&2
+	exit 1
+fi
+
+echo "go vet ./..."
+go vet ./...
+
+echo "go tool mygo vet ."
+go tool mygo vet .

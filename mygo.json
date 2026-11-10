@@ -1,0 +1,11 @@
+{
+  "name": "clash-go",
+  "identifier": "io.github.fim98.clashgo",
+  "version": "0.1.0",
+  "out": "build",
+  "linux": {
+    "webview": false,
+    "comment": "Clash proxy client",
+    "categories": ["Network"]
+  }
+}

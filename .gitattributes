@@ -1,0 +1,12 @@
+# Everything is text with LF endings, so that the shell scripts and the
+# workflows run the same on every machine that clones the repository.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.icns binary
+*.ico binary
+
+# Hooks and scripts are run by git itself: keep them LF and executable.
+.githooks/* text eol=lf
+scripts/*.sh text eol=lf
