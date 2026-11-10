@@ -1,7 +1,7 @@
 {
   "name": "clash-go",
   "identifier": "io.github.fim98.clashgo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "out": "build",
   "updates": {
     "publicKey": "C62ZBoCQcN3dRkePTs4NyS3V29mcEb1+qSMqVYspIJs=",

@@ -5,6 +5,16 @@
 界面是 MyGo 的**原生 UI**（`ui` 包，GPU 直绘），没有前端工程、没有 webview、没有 npm 依赖：
 一个几 MB 的纯 Go 单二进制，可交叉编译到 macOS / Windows / Linux。
 
+## 现在能做什么
+
+M1 已完成：应用把 mihomo 当库跑在自己的进程里，点「启动核心」就在 `7890` 起一个
+混合端口（规则模式、`MATCH,DIRECT`，还没有订阅，所以流量直连），底部状态栏和仪表盘
+实时显示上下行速率、流量曲线、运行时间、内存与连接数，右上角可以切规则/全局/直连，
+模式会同步到内核。
+
+代理、订阅、连接、规则、日志页面已经按设计稿排好版，但数据还是示例值 —— 它们分别在
+M3、M2、M4 接上真实数据。进度见 [docs/roadmap.md](docs/roadmap.md)。
+
 ## 环境
 
 - Go 1.27.3 及以上。`go.mod` 的 `tool` 指令已经固定了 mygo CLI 的版本，
@@ -117,8 +127,13 @@ Windows 同理：签名的 exe 才会让 SmartScreen 快速闭嘴，未签名的
 ## 目录
 
 ```
-main.go              应用入口与窗口
+main.go              应用入口、窗口、内核轮询与生命周期
+types.go             界面状态模型与示例数据
+components.go        卡片、区块标题、延迟徽章等小部件
+view_*.go            侧栏外壳与各页面
 main_test.go         用 ui.NewTester 无窗口点按/输入
+internal/core        mihomo 的启动/重载/停止、状态快照、模式切换
+docs/roadmap.md      里程碑与验收标准
 mygo.json            应用名、identifier、版本、打包输出
 resources/           随应用发布的资源（icon.png 等）
 .githooks/           commit-msg / pre-commit / pre-push
@@ -137,4 +152,6 @@ scripts/             提交信息校验（hook 与 CI 共用）
   `## 0.1.0` 小节（文件一旦存在，每个版本都必须有这一节，否则构建会停）。
 - **更新私钥**：`~/Library/Application Support/mygo/update-keys/mygo-update.key`，
   同时存在 GitHub secret 里。放进密码管理器备份：丢了就再也没法给已安装的用户发更新了。
+- **界面真数据**：代理/订阅/连接/规则/日志四个页面现在展示示例数据（M2–M4）。
+- **系统代理 / TUN**：开关已经画出来了，但还没有接系统设置和提权 helper（M5）。
 - **identifier**：`io.github.fim98.clashgo` 一旦发布就不要再改（系统按它存偏好、权限、注册项）。
