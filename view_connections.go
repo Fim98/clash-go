@@ -11,9 +11,6 @@ func (a *app) viewConnections(c *ui.Context) {
 	t := c.Theme()
 
 	ui.Column(c).Fill().Gap(16).Children(func() {
-		// Page Header
-		SectionHeader(c, "连接监控 (Connections)", "实时查看出站流量、应用进程与规则匹配链路")
-
 		// Top Filter & Action Bar
 		Card(c, func() {
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {

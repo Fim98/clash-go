@@ -10,9 +10,6 @@ func (a *app) viewProxies(c *ui.Context) {
 	t := c.Theme()
 
 	ui.Column(c).Fill().Gap(16).Children(func() {
-		// Page Header
-		SectionHeader(c, "代理节点 (Proxies)", "策略分组选择与节点延迟检测")
-
 		// Top Control Bar
 		Card(c, func() {
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {

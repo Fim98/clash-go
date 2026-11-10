@@ -10,42 +10,50 @@ import (
 func (a *app) viewDashboard(c *ui.Context) {
 	t := c.Theme()
 
-	ui.Column(c).Fill().Gap(16).Children(func() {
-		// Page Header
-		SectionHeader(c, "仪表盘 (Dashboard)", "实时网络流量与核心状态监控")
-
-		// 1. Realtime Traffic Chart Card
+	ui.Column(c).Fill().Gap(18).Children(func() {
+		// 1. Realtime Traffic Chart Card (Clean, modern aesthetic)
 		Card(c, func() {
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
-				ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-					ui.Text(c, "实时网速监控").FontSize(15).Bold()
-					ui.Text(c, "(近 60 秒)").FontSize(12).TextColor(t.TextMuted)
+				ui.Column(c).Gap(2).Children(func() {
+					ui.Text(c, "实时流量监控 (Realtime Traffic)").FontSize(15).Bold()
+					ui.Text(c, "近 60 秒出海与直连上下行网络速率").FontSize(11).TextColor(t.TextMuted)
 				})
 
-				// Realtime Indicators
-				ui.Row(c).Gap(16).AlignItems(ui.Center).Children(func() {
-					ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-						ui.Badge(c, "↑ 上行").Background(ui.RGBA(234, 179, 8, 0.15)).TextColor(t.Warning)
-						ui.Text(c, rate(a.status.Up)).FontSize(13).Bold()
+				// Realtime Rate Badges
+				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
+					upRate := rate(a.status.Up)
+					downRate := rate(a.status.Down)
+					if !a.status.Running {
+						upRate = "0 B/s"
+						downRate = "0 B/s"
+					}
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Padding(4, 10).Background(ui.RGBA(234, 179, 8, 0.12)).Radius(6).Children(func() {
+						ui.Text(c, "↑").TextColor(t.Warning).Bold().FontSize(12)
+						ui.Text(c, upRate).FontSize(12).Bold().TextColor(t.Warning)
+						ui.Textf(c, "(累计 %s)", bytes(a.status.UpTotal)).FontSize(10).TextColor(t.TextMuted)
 					})
-					ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
-						ui.Badge(c, "↓ 下行").Background(ui.RGBA(59, 130, 246, 0.15)).TextColor(t.Accent)
-						ui.Text(c, rate(a.status.Down)).FontSize(13).Bold()
+
+					ui.Row(c).Gap(6).AlignItems(ui.Center).Padding(4, 10).Background(ui.RGBA(59, 130, 246, 0.12)).Radius(6).Children(func() {
+						ui.Text(c, "↓").TextColor(t.Accent).Bold().FontSize(12)
+						ui.Text(c, downRate).FontSize(12).Bold().TextColor(t.Accent)
+						ui.Textf(c, "(累计 %s)", bytes(a.status.DownTotal)).FontSize(10).TextColor(t.TextMuted)
 					})
 				})
 			})
 
-			// Chart Plot
-			yScale := chart.NewLinear(0, chartMax(a.trafficHistoryUp, a.trafficHistoryDown)).Nice(4)
-			chart.Plot(c, chart.Axes{Left: yScale.Ticks(4)}, func(area ui.Element) {
+			// Elegant Chart Plot without intrusive Y-axis labels
+			yMax := chartMax(a.trafficHistoryUp, a.trafficHistoryDown)
+			yScale := chart.NewLinear(0, yMax).Nice(4)
+
+			chart.Plot(c, chart.Axes{}, func(area ui.Element) {
 				area.Draw(func(p *ui.Painter, r ui.Rect) {
-					// Draw background grid lines
+					// Draw subtle horizontal grid lines
 					for _, tick := range yScale.Ticks(4) {
 						yPos := chart.Y(r, tick.At)
-						p.Line(r.X, yPos, r.X+r.W, yPos, 1, ui.RGBA(128, 128, 128, 0.15))
+						p.Line(r.X, yPos, r.X+r.W, yPos, 1, ui.RGBA(128, 128, 128, 0.1))
 					}
 
-					// Build normalized points for Up traffic
+					// Build normalized points
 					n := len(a.trafficHistoryUp)
 					if n > 1 {
 						xs := make([]float32, n)
@@ -57,20 +65,20 @@ func (a *app) viewDashboard(c *ui.Context) {
 							ysDown[i] = yScale.At(float64(a.trafficHistoryDown[i]))
 						}
 
-						// Draw Up curve (Orange / Warning)
+						// Draw Up traffic curve (Orange)
 						upPath := chart.Line(r, xs, ysUp, chart.CurveMonotone)
 						p.StrokePath(upPath, 2.5, t.Warning)
 
-						// Draw Down curve (Blue / Accent)
+						// Draw Down traffic curve (Blue)
 						downPath := chart.Line(r, xs, ysDown, chart.CurveMonotone)
 						p.StrokePath(downPath, 2.5, t.Accent)
 					}
 				})
-			}).Height(160).Gap(8)
+			}).Height(150).Gap(4)
 		})
 
-		// 2. Control Cards Grid (2 Columns)
-		ui.Row(c).Gap(16).Fill().Children(func() {
+		// 2. Control & IP Environment Cards Grid (2 Columns, Equal visual balance)
+		ui.Row(c).Gap(18).Fill().Children(func() {
 			// Left Card: Quick Control
 			ui.Column(c).Grow(1).Children(func() {
 				Card(c, func() {
@@ -80,7 +88,7 @@ func (a *app) viewDashboard(c *ui.Context) {
 					ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
 						ui.Column(c).Gap(2).Children(func() {
 							ui.Text(c, "系统代理 (System Proxy)").FontSize(13).Bold()
-							ui.Text(c, "自动配置系统网络代理端口 127.0.0.1:7890").FontSize(11).TextColor(t.TextMuted)
+							ui.Text(c, "自动配置系统网络代理 127.0.0.1:7890").FontSize(11).TextColor(t.TextMuted)
 						})
 						ui.Switch(c, &a.systemProxyOn)
 					})
@@ -91,16 +99,16 @@ func (a *app) viewDashboard(c *ui.Context) {
 					ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
 						ui.Column(c).Gap(2).Children(func() {
 							ui.Text(c, "TUN 虚拟网卡模式").FontSize(13).Bold()
-							ui.Text(c, "接管全局流量并绕过应用代理设置").FontSize(11).TextColor(t.TextMuted)
+							ui.Text(c, "接管全局流量并绕过应用代理配置").FontSize(11).TextColor(t.TextMuted)
 						})
 						ui.Switch(c, &a.tunModeOn)
 					})
 
 					ui.Divider(c)
 
-					// Outbound Mode
-					ui.Column(c).Gap(6).Children(func() {
-						ui.Text(c, "分流模式").FontSize(13).Bold()
+					// Outbound Mode Selector
+					ui.Column(c).Gap(8).Children(func() {
+						ui.Text(c, "分流规则模式").FontSize(13).Bold()
 						ui.Segmented(c, &a.outboundMode, "规则模式", "全局模式", "直连模式")
 					})
 				})
@@ -116,15 +124,15 @@ func (a *app) viewDashboard(c *ui.Context) {
 
 					StatRow(c, "出口 IP 地址", "—")
 					StatRow(c, "地理位置", "—")
-					StatRow(c, "运营商与 ASN", "—")
-					StatRow(c, "本地直连延迟", "—")
-					ui.Text(c, "探测出口 IP 需要一个外部服务，随系统集成一起接入。").FontSize(11).TextColor(t.TextMuted)
+					StatRow(c, "运营商 / ASN", "—")
+					StatRow(c, "本地测试延迟", "—")
+					ui.Text(c, "探测出口 IP 需要外部服务，随系统集成一起接入。").FontSize(11).TextColor(t.TextMuted)
 				})
 			})
 		})
 
 		// 3. Status & Health Cards (2 Columns)
-		ui.Row(c).Gap(16).Fill().Children(func() {
+		ui.Row(c).Gap(18).Fill().Children(func() {
 			// Clash Core Health
 			ui.Column(c).Grow(1).Children(func() {
 				Card(c, func() {
@@ -132,35 +140,45 @@ func (a *app) viewDashboard(c *ui.Context) {
 
 					coreVersion := "未启动"
 					if a.status.Running {
-						coreVersion = "mihomo (Meta) 内嵌"
+						coreVersion = "mihomo " + a.status.Version
 					}
 					StatRow(c, "核心版本", coreVersion)
-					StatRow(c, "运行时间", uptime(a.status.Since))
-					StatRow(c, "内存占用", bytes(int64(a.status.Memory)))
+
+					uptimeStr := "未运行"
+					if a.status.Running {
+						uptimeStr = uptime(a.status.Since)
+					}
+					StatRow(c, "运行时间", uptimeStr)
+
+					memStr := bytes(int64(a.status.Memory))
+					if !a.status.Running {
+						memStr = "0 B"
+					}
+					StatRow(c, "内存占用", memStr)
 					StatRow(c, "活跃连接", fmt.Sprintf("%d 个连接", a.status.Connections))
 					StatRow(c, "混合端口", fmt.Sprintf("%d", mixedPort))
 				})
 			})
 
-			// Quick Actions
+			// Quick Action Shortcuts
 			ui.Column(c).Grow(1).Children(func() {
 				Card(c, func() {
-					ui.Text(c, "快捷操作").FontSize(15).Bold()
+					ui.Text(c, "常用快捷工具").FontSize(15).Bold()
 
 					ui.Row(c).Gap(10).Children(func() {
-						if ui.Button(c, "⚡ 一键测速").Grow(1).Clicked() {
-							// Trigger latency check
+						if ui.Button(c, "⚡ 一键全部测速").Grow(1).Clicked() {
+							// Trigger latency test
 						}
-						if ui.Button(c, "⟳ 更新订阅").Grow(1).Clicked() {
-							// Trigger profile update
+						if ui.Button(c, "⟳ 刷新订阅配置").Grow(1).Clicked() {
+							// Trigger profile reload
 						}
 					})
 
 					ui.Row(c).Gap(10).Children(func() {
-						if ui.Button(c, "🗑 断开连接").Grow(1).Clicked() {
-							// Close all connections
+						if ui.Button(c, "🗑 断开全部连接").Grow(1).Clicked() {
+							a.connections = nil
 						}
-						if ui.Button(c, "📁 配置目录").Grow(1).Clicked() {
+						if ui.Button(c, "📁 打开配置目录").Grow(1).Clicked() {
 							// Open config directory
 						}
 					})

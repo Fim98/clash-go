@@ -1,14 +1,23 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/egoist/mygo/ui"
 )
 
 // view builds the complete application shell and current view.
 func (a *app) view(c *ui.Context) {
 	t := c.Theme()
+	tb := c.TitleBar()
 
-	// Root Horizontal Split: Left Sidebar + Right Content Area
+	// Top inset for macOS traffic lights when TitleBarHiddenInset is used
+	topInset := tb.Height
+	if topInset < 28 {
+		topInset = 28
+	}
+
+	// Root Horizontal Split: Full-height Left Sidebar + Right Content Area
 	ui.Row(c).Fill().Children(func() {
 		// ==================== LEFT SIDEBAR ====================
 		ui.Column(c).
@@ -17,14 +26,16 @@ func (a *app) view(c *ui.Context) {
 			Border(1, t.Border).
 			Justify(ui.SpaceBetween).
 			Children(func() {
-				// Top Section: App Branding & Navigation Items
-				ui.Column(c).Fill().Gap(8).Padding(16, 12).Children(func() {
+				// Top Section: Traffic light spacing + Branding + Navigation
+				ui.Column(c).Fill().Gap(10).Padding(topInset+8, 14, 14, 14).Children(func() {
 					// App Brand Header
-					ui.Row(c).Gap(10).AlignItems(ui.Center).Padding(4, 8).Children(func() {
-						ui.Text(c, "⚡").FontSize(22)
+					ui.Row(c).Gap(10).AlignItems(ui.Center).Padding(0, 4).Children(func() {
 						ui.Column(c).Gap(2).Children(func() {
-							ui.Text(c, "clash-go").FontSize(17).Bold()
-							ui.Text(c, "GPU 原生客户端").FontSize(10).TextColor(t.TextMuted)
+							ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+								ui.Text(c, "clash-go").FontSize(18).Bold()
+								ui.Badge(c, "Core").Background(ui.RGBA(59, 130, 246, 0.15)).TextColor(t.Accent)
+							})
+							ui.Text(c, "GPU 原生轻量客户端").FontSize(11).TextColor(t.TextMuted)
 						})
 					})
 
@@ -32,50 +43,48 @@ func (a *app) view(c *ui.Context) {
 
 					// Navigation Sidebar Tree
 					ui.Sidebar(c, &a.currentTab, func() {
-						ui.SidebarItem(c, "dashboard", nil, "📊 仪表盘")
-						ui.SidebarItem(c, "proxies", nil, "⚡ 代理节点")
-						ui.SidebarItem(c, "profiles", nil, "📑 订阅配置")
-						ui.SidebarItem(c, "connections", nil, "🌐 连接监控")
-						ui.SidebarItem(c, "rules", nil, "🔀 分流规则")
-						ui.SidebarItem(c, "logs", nil, "📜 运行日志")
-						ui.SidebarItem(c, "settings", nil, "⚙️ 偏好设置")
+						ui.SidebarItem(c, "dashboard", nil, "仪表盘  Dashboard")
+						ui.SidebarItem(c, "proxies", nil, "代理节点  Proxies")
+						ui.SidebarItem(c, "profiles", nil, "订阅配置  Profiles")
+						ui.SidebarItem(c, "connections", nil, "连接监控  Connections")
+						ui.SidebarItem(c, "rules", nil, "分流规则  Rules")
+						ui.SidebarItem(c, "logs", nil, "运行日志  Logs")
+						ui.SidebarItem(c, "settings", nil, "偏好设置  Settings")
 					}).Grow(1)
 				})
 
-				// Bottom Section: Quick Toggles & Client Info
+				// Bottom Section: Active Profile & Core Status Indicator
 				ui.Column(c).
-					Gap(10).
-					Padding(14, 16).
+					Gap(8).
+					Padding(14).
 					Background(ui.RGBA(128, 128, 128, 0.05)).
 					Border(1, t.Border).
 					Children(func() {
-						// System Proxy Switch
-						ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
-							ui.Text(c, "系统代理").FontSize(12).Bold()
-							ui.Switch(c, &a.systemProxyOn)
-						})
-
-						// TUN Mode Switch
-						ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
-							ui.Text(c, "TUN 模式").FontSize(12).Bold()
-							ui.Switch(c, &a.tunModeOn)
+						// Active Profile Info
+						ui.Column(c).Gap(2).Children(func() {
+							ui.Text(c, "当前订阅").FontSize(10).TextColor(t.TextMuted)
+							ui.Text(c, "主力高速专线").FontSize(12).Bold().SingleLine()
 						})
 
 						ui.Divider(c)
 
-						ui.Row(c).Justify(ui.SpaceBetween).Children(func() {
-							ui.Text(c, "v0.2.0 • Pure Go").FontSize(10).TextColor(t.TextMuted)
-							ui.Text(c, "Zero CGO").FontSize(10).TextColor(t.TextMuted)
+						// Core Status Pill
+						ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
+							ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
+								ui.Text(c, "●").TextColor(a.stateColor(t)).FontSize(11)
+								ui.Text(c, a.stateLabel()).FontSize(11).Bold()
+							})
+							ui.Text(c, "端口 7890").FontSize(10).TextColor(t.TextMuted)
 						})
 					})
 			})
 
 		// ==================== RIGHT CONTENT AREA ====================
 		ui.Column(c).Grow(1).Fill().Children(func() {
-			// Top Header Toolbar
+			// Top Header Bar
 			ui.Row(c).
-				Height(52).
-				Padding(16, 20).
+				Height(topInset+24).
+				Padding(topInset-10, 24, 8, 24).
 				Background(t.Surface).
 				Border(1, t.Border).
 				Justify(ui.SpaceBetween).
@@ -83,34 +92,43 @@ func (a *app) view(c *ui.Context) {
 				DragWindow().
 				Children(func() {
 					// Page Title
-					ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-						tabTitles := map[string]string{
-							"dashboard":   "仪表盘 (Dashboard)",
-							"proxies":     "代理节点 (Proxies)",
-							"profiles":    "订阅配置 (Profiles)",
-							"connections": "连接监控 (Connections)",
-							"rules":       "分流规则 (Rules)",
-							"logs":        "运行日志 (Logs)",
-							"settings":    "偏好设置 (Settings)",
-						}
-						title := tabTitles[a.currentTab]
-						if title == "" {
-							title = "clash-go"
-						}
-						ui.Text(c, title).FontSize(16).Bold()
-					})
+					tabTitles := map[string]string{
+						"dashboard":   "仪表盘 (Dashboard)",
+						"proxies":     "代理节点 (Proxies)",
+						"profiles":    "订阅配置 (Profiles)",
+						"connections": "连接监控 (Connections)",
+						"rules":       "分流规则 (Rules)",
+						"logs":        "运行日志 (Logs)",
+						"settings":    "偏好设置 (Settings)",
+					}
+					title := tabTitles[a.currentTab]
+					if title == "" {
+						title = "clash-go"
+					}
+					ui.Text(c, title).FontSize(16).Bold()
 
-					// Header Actions: Outbound Mode & Core Reload
+					// Right Header Controls: Mode Selector & Core Toggle Button
 					ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 						ui.Segmented(c, &a.outboundMode, "规则", "全局", "直连")
-						if ui.Button(c, "⟳ 重载核心").Clicked() {
-							// Trigger core reload
+
+						if a.status.Running {
+							if ui.Button(c, "⏸ 停止核心").Clicked() {
+								a.stop()
+							}
+						} else {
+							if ui.PrimaryButton(c, "▶ 启动核心").Disabled(a.busy).Clicked() {
+								a.start()
+							}
+						}
+
+						if ui.Button(c, "⟳ 重载").Clicked() {
+							// Trigger reload
 						}
 					})
 				})
 
-			// Main Scrollable Viewport
-			ui.Scroll(c).Grow(1).Padding(20).Children(func() {
+			// Main Scrollable Viewport (NO duplicate titles!)
+			ui.Scroll(c).Grow(1).Padding(24).Children(func() {
 				switch a.currentTab {
 				case "proxies":
 					a.viewProxies(c)
@@ -129,31 +147,26 @@ func (a *app) view(c *ui.Context) {
 				}
 			})
 
-			// Bottom Status Bar
+			// Bottom Minimal Status Bar
 			ui.Row(c).
-				Height(30).
-				Padding(4, 16).
+				Height(28).
+				Padding(2, 20).
 				Background(t.Surface).
 				Border(1, t.Border).
 				Justify(ui.SpaceBetween).
 				AlignItems(ui.Center).
 				Children(func() {
-					// Left: Core status light & toggle
+					// Left: Status dot and uptime
 					ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-						ui.Text(c, "●").TextColor(a.stateColor(t)).FontSize(12)
-						ui.Text(c, a.stateLabel()).FontSize(11).TextColor(t.TextMuted)
+						ui.Text(c, "●").TextColor(a.stateColor(t)).FontSize(11)
+						statusText := "核心未运行"
 						if a.status.Running {
-							if ui.Button(c, "停止核心").Clicked() {
-								a.stop()
-							}
-						} else {
-							if ui.PrimaryButton(c, "启动核心").Disabled(a.busy).Clicked() {
-								a.start()
-							}
+							statusText = fmt.Sprintf("Mihomo 核心运行中 • %s", uptime(a.status.Since))
 						}
+						ui.Text(c, statusText).FontSize(11).TextColor(t.TextMuted)
 					})
 
-					// Right: Traffic, Memory, Latency
+					// Right: Traffic, Memory, Connections
 					ui.Row(c).Gap(16).AlignItems(ui.Center).Children(func() {
 						upRate := rate(a.status.Up)
 						downRate := rate(a.status.Down)
@@ -161,7 +174,12 @@ func (a *app) view(c *ui.Context) {
 							upRate = "0 B/s"
 							downRate = "0 B/s"
 						}
-						ui.Textf(c, "↑ %s   ↓ %s", upRate, downRate).FontSize(11).Bold()
+						ui.Row(c).Gap(6).Children(func() {
+							ui.Text(c, "↑").TextColor(t.Warning).FontSize(11).Bold()
+							ui.Text(c, upRate).FontSize(11).Bold()
+							ui.Text(c, "↓").TextColor(t.Accent).FontSize(11).Bold()
+							ui.Text(c, downRate).FontSize(11).Bold()
+						})
 
 						memStr := bytes(int64(a.status.Memory))
 						if !a.status.Running {

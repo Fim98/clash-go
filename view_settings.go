@@ -8,9 +8,6 @@ func (a *app) viewSettings(c *ui.Context) {
 	t := c.Theme()
 
 	ui.Column(c).Fill().Gap(16).Children(func() {
-		// Page Header
-		SectionHeader(c, "偏好设置 (Settings)", "Clash 核心网络、系统代理旁路、TUN 网卡栈与外观交互")
-
 		// 1. Clash Core Network Settings
 		Card(c, func() {
 			ui.Text(c, "Clash 核心与网络监听").FontSize(15).Bold()

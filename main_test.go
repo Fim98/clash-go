@@ -18,7 +18,7 @@ func TestView(t *testing.T) {
 	if !tt.HasText("clash-go") {
 		t.Errorf("texts %q without app branding", tt.Texts())
 	}
-	if !tt.HasText("实时网速监控") {
+	if !tt.HasText("实时流量监控") {
 		t.Errorf("texts %q without dashboard elements", tt.Texts())
 	}
 	if !tt.HasText("启动核心") {

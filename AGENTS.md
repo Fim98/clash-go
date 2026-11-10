@@ -36,7 +36,11 @@ When modifying or creating code in `ui` packages, strictly obey the MyGo native 
    - Never run I/O (network requests to Clash REST API, WebSocket streams, disk writes) on the UI build pass.
    - Run asynchronous tasks in Go goroutines and publish state changes to the UI via `window.Update(func() { ... })`.
    - Never call unconditional side effects inside rendering functions.
-5. **Testing UI without Windows**:
+5. **Layout API (mygo v0.8.3)**:
+   - Flex alignment is `.Justify(ui.Start | Center | End | SpaceBetween | SpaceAround | SpaceEvenly)`; there is no `JustifyContent` method.
+   - Charts live in `github.com/egoist/mygo/ui/chart` (`NewLinear`, `Y`, `Line`, `Plot`, `Axes`).
+6. **Live data, not mock numbers**: the shell's status bar and dashboard read the running core through `a.status` (see `internal/core`). Rates, uptime, memory, connection counts and the traffic graph must come from that snapshot; sample values belong in tests or in the M2–M4 placeholder pages only.
+7. **Testing UI without Windows**:
    - Reproduce and test UI flows with `ui.NewTester(view)`. Exercise multiple frames, focus transitions, clicks, and text inputs headlessly.
 
 ---

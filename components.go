@@ -6,34 +6,29 @@ import (
 	"github.com/egoist/mygo/ui"
 )
 
-// Card builds a modern card container with a subtle surface background and border.
+// Card builds an elevated modern card container with subtle shadow and border.
 func Card(c *ui.Context, fn func()) ui.Element {
 	t := c.Theme()
+	shadowColor := ui.RGBA(0, 0, 0, 0.04)
+	if t.Dark {
+		shadowColor = ui.RGBA(0, 0, 0, 0.25)
+	}
+
 	return ui.Column(c).
 		Background(t.Surface).
 		Border(1, t.Border).
-		Radius(8).
-		Padding(16).
-		Gap(12).
+		Radius(10).
+		Shadow(0, 2, 6, 0, shadowColor).
+		Padding(18).
+		Gap(14).
 		Children(fn)
 }
 
-// SectionHeader displays a title and an optional subtitle description.
-func SectionHeader(c *ui.Context, title string, desc string) {
-	t := c.Theme()
-	ui.Column(c).Gap(4).Children(func() {
-		ui.Text(c, title).FontSize(18).Bold()
-		if desc != "" {
-			ui.Text(c, desc).FontSize(12).TextColor(t.TextMuted)
-		}
-	})
-}
-
-// LatencyBadge builds a colored badge indicating node response latency.
+// LatencyBadge builds a refined colored pill badge indicating node response latency.
 func LatencyBadge(c *ui.Context, ms int) ui.Element {
 	t := c.Theme()
 	if ms < 0 {
-		return ui.Badge(c, "Timeout").
+		return ui.Badge(c, "超时").
 			Background(ui.RGBA(239, 68, 68, 0.15)).
 			TextColor(t.Danger)
 	}

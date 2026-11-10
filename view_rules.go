@@ -11,9 +11,6 @@ func (a *app) viewRules(c *ui.Context) {
 	t := c.Theme()
 
 	ui.Column(c).Fill().Gap(16).Children(func() {
-		// Page Header
-		SectionHeader(c, "分流规则 (Rules)", "流量路由决策表与规则集 (Rule Providers) 监控")
-
 		// Top Search Bar
 		Card(c, func() {
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {

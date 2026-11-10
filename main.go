@@ -192,13 +192,14 @@ func main() {
 
 	mygo.App.WhenReady(func() {
 		a.win = mygo.NewWindow(mygo.WindowOptions{
-			Title:     "clash-go",
-			Width:     960,
-			Height:    640,
-			MinWidth:  760,
-			MinHeight: 520,
-			StateKey:  "main",
-			Content:   ui.View(a.view),
+			Title:         "clash-go",
+			Width:         1040,
+			Height:        700,
+			MinWidth:      860,
+			MinHeight:     560,
+			StateKey:      "clash-go-v2",
+			TitleBarStyle: mygo.TitleBarHiddenInset,
+			Content:       ui.View(a.view),
 		})
 		go a.poll()
 	})

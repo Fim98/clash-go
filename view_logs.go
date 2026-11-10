@@ -10,9 +10,6 @@ func (a *app) viewLogs(c *ui.Context) {
 	t := c.Theme()
 
 	ui.Column(c).Fill().Gap(16).Children(func() {
-		// Page Header
-		SectionHeader(c, "运行日志 (Logs)", "Clash 核心实时输出流、调试信息与级别过滤")
-
 		// Top Control Bar
 		Card(c, func() {
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {

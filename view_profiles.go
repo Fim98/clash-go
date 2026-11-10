@@ -10,9 +10,6 @@ func (a *app) viewProfiles(c *ui.Context) {
 	t := c.Theme()
 
 	ui.Column(c).Fill().Gap(16).Children(func() {
-		// Page Header
-		SectionHeader(c, "订阅配置 (Profiles)", "远端订阅同步、本地配置文件与规则拓展")
-
 		// Top Action Toolbar
 		Card(c, func() {
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
