@@ -193,11 +193,11 @@ func main() {
 	mygo.App.WhenReady(func() {
 		a.win = mygo.NewWindow(mygo.WindowOptions{
 			Title:         "clash-go",
-			Width:         1040,
+			Width:         1060,
 			Height:        700,
-			MinWidth:      860,
-			MinHeight:     560,
-			StateKey:      "clash-go-v2",
+			MinWidth:      880,
+			MinHeight:     580,
+			StateKey:      "clash-go-v4",
 			TitleBarStyle: mygo.TitleBarHiddenInset,
 			Content:       ui.View(a.view),
 		})

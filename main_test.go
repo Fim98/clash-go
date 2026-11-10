@@ -12,11 +12,11 @@ import (
 func TestView(t *testing.T) {
 	mgr := core.New(t.TempDir())
 	a := newApp(mgr)
-	tt := ui.NewTester(a.view, 960, 640)
+	tt := ui.NewTester(a.view, 1060, 700)
 
 	// 1. Initial Frame on Dashboard
-	if !tt.HasText("clash-go") {
-		t.Errorf("texts %q without app branding", tt.Texts())
+	if !tt.HasText("核心控制") {
+		t.Errorf("texts %q without sidebar navigation", tt.Texts())
 	}
 	if !tt.HasText("实时流量监控") {
 		t.Errorf("texts %q without dashboard elements", tt.Texts())

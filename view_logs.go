@@ -9,23 +9,21 @@ import (
 func (a *app) viewLogs(c *ui.Context) {
 	t := c.Theme()
 
-	ui.Column(c).Fill().Gap(16).Children(func() {
+	ui.Column(c).Grow(1).Gap(16).Children(func() {
 		// Top Control Bar
 		Card(c, func() {
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
-				// Level Selector & Search
 				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 					ui.Segmented(c, &a.logLevelIdx, "全部", "INFO", "WARN", "ERROR", "DEBUG")
 					ui.SearchField(c, &a.logSearch).Placeholder("过滤日志关键词...").Width(220)
 				})
 
-				// Right Controls
 				ui.Row(c).Gap(16).AlignItems(ui.Center).Children(func() {
 					ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 						ui.Text(c, "自动滚屏").FontSize(12).TextColor(t.TextMuted)
 						ui.Switch(c, &a.autoScroll)
 					})
-					if ui.Button(c, "🗑 清空日志").Clicked() {
+					if ui.Button(c, "清空日志").Clicked() {
 						a.logs = nil
 					}
 				})
@@ -54,7 +52,7 @@ func (a *app) viewLogs(c *ui.Context) {
 		// Log Stream Box
 		Card(c, func() {
 			if len(filtered) == 0 {
-				ui.Column(c).Center().Padding(40).Children(func() {
+				ui.Column(c).Grow(1).Center().Padding(40).Children(func() {
 					ui.Text(c, "暂无符合条件的日志记录").FontSize(14).TextColor(t.TextMuted)
 				})
 				return
@@ -64,28 +62,25 @@ func (a *app) viewLogs(c *ui.Context) {
 				ui.Column(c).Gap(8).Padding(4).Children(func() {
 					for _, entry := range filtered {
 						ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
-							// Timestamp
 							ui.Text(c, entry.Time).FontSize(11).TextColor(t.TextMuted)
 
-							// Level Badge
 							badge := ui.Badge(c, entry.Level)
 							switch entry.Level {
 							case "INFO":
-								badge.Background(ui.RGBA(59, 130, 246, 0.15)).TextColor(t.Accent)
+								badge.Background(t.Accent.Alpha(0.14)).TextColor(t.Accent)
 							case "WARN":
-								badge.Background(ui.RGBA(234, 179, 8, 0.15)).TextColor(t.Warning)
+								badge.Background(t.Warning.Alpha(0.14)).TextColor(t.Warning)
 							case "ERROR":
-								badge.Background(ui.RGBA(239, 68, 68, 0.15)).TextColor(t.Danger)
+								badge.Background(t.Danger.Alpha(0.14)).TextColor(t.Danger)
 							default:
-								badge.Background(ui.RGBA(128, 128, 128, 0.12)).TextColor(t.TextMuted)
+								badge.Background(t.Text.Alpha(0.08)).TextColor(t.TextMuted)
 							}
 
-							// Message Content
 							ui.Text(c, entry.Message).FontSize(12).SingleLine()
 						})
 					}
 				})
 			})
-		})
+		}).Grow(1)
 	})
 }

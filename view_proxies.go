@@ -9,17 +9,17 @@ import (
 func (a *app) viewProxies(c *ui.Context) {
 	t := c.Theme()
 
-	ui.Column(c).Fill().Gap(16).Children(func() {
+	ui.Column(c).Gap(16).Children(func() {
 		// Top Control Bar
 		Card(c, func() {
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
-				// Search Input
-				ui.SearchField(c, &a.proxySearch).Placeholder("搜索节点关键词 / 国家...").Width(260)
+				ui.SearchField(c, &a.proxySearch).Placeholder("搜索节点关键词 / 地区...").Width(260)
 
-				// Right Controls: Mode switcher & Speed test
-				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
-					ui.Segmented(c, &a.outboundMode, "规则", "全局", "直连")
-					if ui.PrimaryButton(c, "⚡ 全部测速").Clicked() {
+				ui.Row(c).Gap(10).AlignItems(ui.Center).Children(func() {
+					if ui.Segmented(c, &a.outboundMode, "规则", "全局", "直连").Changed() {
+						a.setMode(modes[a.outboundMode].mode)
+					}
+					if ui.PrimaryButton(c, "全部测速").Clicked() {
 						// Speed test trigger
 					}
 				})
@@ -44,7 +44,7 @@ func (a *app) viewProxies(c *ui.Context) {
 		ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
 			ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, curGroup.Name).FontSize(14).Bold()
-				ui.Badge(c, curGroup.Type).Background(ui.RGBA(128, 128, 128, 0.15)).TextColor(t.TextMuted)
+				ui.Badge(c, curGroup.Type).Background(t.Text.Alpha(0.08)).TextColor(t.TextMuted)
 			})
 			ui.Row(c).Gap(6).AlignItems(ui.Center).Children(func() {
 				ui.Text(c, "当前生效:").FontSize(12).TextColor(t.TextMuted)
@@ -52,8 +52,8 @@ func (a *app) viewProxies(c *ui.Context) {
 			})
 		})
 
-		// Node Cards Grid (Wrap enabled)
-		ui.Row(c).Wrap().Gap(12).Fill().Children(func() {
+		// Node Cards Grid (3 equal columns stretching across full width)
+		ui.Grid(c).Columns(3).Gap(12).Children(func() {
 			filter := strings.ToLower(strings.TrimSpace(a.proxySearch))
 			for i := range curGroup.Nodes {
 				node := &curGroup.Nodes[i]
@@ -63,22 +63,25 @@ func (a *app) viewProxies(c *ui.Context) {
 
 				isSelected := (curGroup.Selected == node.Name)
 
-				// Node Card
+				cardBg := t.Background
+				if t.Dark {
+					cardBg = t.Background.Mix(t.Surface, 0.5)
+				}
 				cardCol := ui.Column(c).
-					Width(210).
-					Background(t.Surface).
+					Key(node.Name).
+					Background(cardBg).
 					Radius(8).
-					Padding(12).
-					Gap(8)
+					Padding(12, 14).
+					Gap(8).
+					Cursor(ui.CursorPointer)
 
 				if isSelected {
-					cardCol.Border(1.5, t.Accent).Background(ui.RGBA(59, 130, 246, 0.08))
+					cardCol.Border(1.5, t.Accent).Background(t.Accent.Alpha(0.08))
 				} else {
-					cardCol.Border(1, t.Border)
+					cardCol.Border(1, t.Border.Alpha(0.75))
 				}
 
 				if cardCol.Children(func() {
-					// Top row: Name & check icon
 					ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
 						ui.Text(c, node.Name).FontSize(13).Bold().SingleLine()
 						if isSelected {
@@ -86,10 +89,9 @@ func (a *app) viewProxies(c *ui.Context) {
 						}
 					})
 
-					// Bottom row: Protocol & Latency
 					ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
 						ui.Badge(c, node.Type).
-							Background(ui.RGBA(128, 128, 128, 0.12)).
+							Background(t.Text.Alpha(0.08)).
 							TextColor(t.TextMuted)
 						LatencyBadge(c, node.Latency)
 					})

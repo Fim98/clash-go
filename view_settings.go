@@ -7,10 +7,10 @@ import (
 func (a *app) viewSettings(c *ui.Context) {
 	t := c.Theme()
 
-	ui.Column(c).Fill().Gap(16).Children(func() {
+	ui.Column(c).Gap(16).Children(func() {
 		// 1. Clash Core Network Settings
 		Card(c, func() {
-			ui.Text(c, "Clash 核心与网络监听").FontSize(15).Bold()
+			ui.Text(c, "Clash 核心与网络监听").FontSize(14).Bold()
 
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
 				ui.Column(c).Gap(2).Children(func() {
@@ -22,7 +22,7 @@ func (a *app) viewSettings(c *ui.Context) {
 
 			ui.Divider(c)
 
-			ui.Row(c).Gap(16).Children(func() {
+			ui.Row(c).Gap(16).AlignItems(ui.Stretch).Children(func() {
 				ui.Column(c).Grow(1).Gap(6).Children(func() {
 					ui.Text(c, "混合代理端口 (Mixed Port)").FontSize(13).Bold()
 					ui.TextInput(c, &a.mixedPort).Placeholder("7890")
@@ -41,7 +41,7 @@ func (a *app) viewSettings(c *ui.Context) {
 
 		// 2. System Proxy & TUN Mode Settings
 		Card(c, func() {
-			ui.Text(c, "系统代理与 TUN 虚拟网卡").FontSize(15).Bold()
+			ui.Text(c, "系统代理与 TUN 虚拟网卡").FontSize(14).Bold()
 
 			ui.Column(c).Gap(6).Children(func() {
 				ui.Text(c, "系统代理绕过名单 (Bypass Domain List)").FontSize(13).Bold()
@@ -58,7 +58,7 @@ func (a *app) viewSettings(c *ui.Context) {
 
 		// 3. Appearance & App Behavior Settings
 		Card(c, func() {
-			ui.Text(c, "界面外观与常规行为").FontSize(15).Bold()
+			ui.Text(c, "界面外观与常规行为").FontSize(14).Bold()
 
 			ui.Column(c).Gap(6).Children(func() {
 				ui.Text(c, "主题模式选择").FontSize(13).Bold()

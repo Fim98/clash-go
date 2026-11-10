@@ -10,19 +10,19 @@ import (
 func (a *app) viewRules(c *ui.Context) {
 	t := c.Theme()
 
-	ui.Column(c).Fill().Gap(16).Children(func() {
+	ui.Column(c).Grow(1).Gap(16).Children(func() {
 		// Top Search Bar
 		Card(c, func() {
 			ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
 				ui.Row(c).Gap(12).AlignItems(ui.Center).Children(func() {
 					ui.SearchField(c, &a.ruleSearch).Placeholder("搜索域名 / 规则类型 / 策略...").Width(280)
 					ui.Badge(c, fmt.Sprintf("总计 %d 条规则", len(a.rules))).
-						Background(ui.RGBA(128, 128, 128, 0.15)).
+						Background(t.Text.Alpha(0.08)).
 						TextColor(t.TextMuted)
 				})
 
 				ui.Row(c).Gap(8).AlignItems(ui.Center).Children(func() {
-					if ui.Button(c, "⟳ 更新规则集").Clicked() {
+					if ui.Button(c, "更新规则集").Clicked() {
 						// Update rule providers
 					}
 				})
@@ -33,23 +33,21 @@ func (a *app) viewRules(c *ui.Context) {
 		Card(c, func() {
 			ui.Text(c, "规则集 Providers 概况").FontSize(14).Bold()
 
-			ui.Row(c).Gap(16).Children(func() {
-				// Provider 1
-				ui.Column(c).Grow(1).Padding(10).Background(ui.RGBA(128, 128, 128, 0.06)).Radius(6).Gap(4).Children(func() {
-					ui.Row(c).Justify(ui.SpaceBetween).Children(func() {
-						ui.Text(c, "🛡️ Reject-Rules").FontSize(13).Bold()
-						ui.Badge(c, "1,200 条").Background(ui.RGBA(239, 68, 68, 0.15)).TextColor(t.Danger)
+			ui.Row(c).Gap(14).AlignItems(ui.Stretch).Children(func() {
+				ui.Column(c).Grow(1).Padding(10, 14).Background(t.Surface).Radius(8).Gap(4).Children(func() {
+					ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
+						ui.Text(c, "Reject-Rules").FontSize(13).Bold()
+						ui.Badge(c, "1,200 条").Background(t.Danger.Alpha(0.14)).TextColor(t.Danger)
 					})
-					ui.Text(c, "行为: domain • 远端同步 • 1小时前更新").FontSize(11).TextColor(t.TextMuted)
+					ui.Text(c, "行为: domain · 远端同步 · 1小时前更新").FontSize(11).TextColor(t.TextMuted)
 				})
 
-				// Provider 2
-				ui.Column(c).Grow(1).Padding(10).Background(ui.RGBA(128, 128, 128, 0.06)).Radius(6).Gap(4).Children(func() {
-					ui.Row(c).Justify(ui.SpaceBetween).Children(func() {
-						ui.Text(c, "🇨🇳 Direct-GeoIP").FontSize(13).Bold()
-						ui.Badge(c, "4,500 条").Background(ui.RGBA(34, 197, 94, 0.15)).TextColor(t.Success)
+				ui.Column(c).Grow(1).Padding(10, 14).Background(t.Surface).Radius(8).Gap(4).Children(func() {
+					ui.Row(c).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
+						ui.Text(c, "Direct-GeoIP").FontSize(13).Bold()
+						ui.Badge(c, "4,500 条").Background(t.Success.Alpha(0.14)).TextColor(t.Success)
 					})
-					ui.Text(c, "行为: ipcidr • 远端同步 • 3小时前更新").FontSize(11).TextColor(t.TextMuted)
+					ui.Text(c, "行为: ipcidr · 远端同步 · 3小时前更新").FontSize(11).TextColor(t.TextMuted)
 				})
 			})
 		})
@@ -68,15 +66,15 @@ func (a *app) viewRules(c *ui.Context) {
 
 		// Rules Table
 		columns := []ui.TableColumn{
-			{Title: "#", ID: "index", Width: 50},
-			{Title: "规则类型", ID: "type", Width: 160},
+			{Title: "#", ID: "index", Width: 60},
+			{Title: "规则类型", ID: "type", Width: 170},
 			{Title: "匹配内容 (Payload)", ID: "payload", Width: 280},
 			{Title: "目标策略组 / 动作", ID: "proxy", Width: 180},
 		}
 
 		Card(c, func() {
 			if len(filtered) == 0 {
-				ui.Column(c).Center().Padding(40).Children(func() {
+				ui.Column(c).Grow(1).Center().Padding(40).Children(func() {
 					ui.Text(c, "没有匹配的分流规则").FontSize(14).TextColor(t.TextMuted)
 				})
 				return
@@ -89,13 +87,12 @@ func (a *app) viewRules(c *ui.Context) {
 					ui.Textf(c, "%d", rule.Index).FontSize(12).TextColor(t.TextMuted)
 				case 1:
 					ui.Badge(c, rule.Type).
-						Background(ui.RGBA(59, 130, 246, 0.12)).
+						Background(t.Accent.Alpha(0.12)).
 						TextColor(t.Accent)
 				case 2:
 					payload := rule.Payload
 					if payload == "" {
-						payload = "(全局兜底匹配)"
-						ui.Text(c, payload).FontSize(12).TextColor(t.TextMuted).SingleLine()
+						ui.Text(c, "(全局兜底匹配)").FontSize(12).TextColor(t.TextMuted).SingleLine()
 					} else {
 						ui.Text(c, payload).FontSize(13).Bold().SingleLine()
 					}
@@ -103,6 +100,6 @@ func (a *app) viewRules(c *ui.Context) {
 					ui.Text(c, rule.Proxy).FontSize(13).TextColor(t.Accent).Bold().SingleLine()
 				}
 			}).Grow(1)
-		})
+		}).Grow(1).Padding(0).Clip()
 	})
 }
