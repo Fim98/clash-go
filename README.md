@@ -81,6 +81,37 @@ tag 必须等于 `v` + `mygo.json` 的 `version`（工作流第一步会校验�
 三个平台并行构建，产物上传到一个 draft release，最后自动发布；tag 带 `-`
 （如 `v0.2.0-beta.1`）会标成 prerelease。
 
+每次构建都用 `updates.publicKey` 对应的私钥（`MYGO_UPDATER_PRIVATE_KEY` secret）签名，
+所以发布里除了安装包还有 `update-<os>-<arch>.json` 清单、跨版本的 delta 更新，
+以及 `install.sh` / `install.ps1`。
+
+## 安装：绕过 Gatekeeper 与 SmartScreen
+
+没有付费签名证书时，从浏览器下载的 `.dmg` 会被 macOS 标记为来自网络，直接打开会弹
+「无法验证开发者」。三条免费的路，体验从好到差：
+
+1. **一行安装（推荐，macOS / Linux）**
+
+   ```sh
+   curl -fsSL https://github.com/Fim98/clash-go/releases/latest/download/install.sh | sh
+   ```
+
+   `curl` 下载的文件不带 quarantine 属性，Gatekeeper 根本不会评估签名，装进
+   `/Applications` 后点开就能用。脚本会按清单里的 SHA-256 与 Ed25519 签名校验
+   安装包，安装路径和普通 app 一样。
+2. **下载 `.dmg` 后手动放行**：拖动安装，第一次打开被拦 → 「系统设置 → 隐私与安全性 →
+   仍要打开」。macOS 15 起 Apple 取消了右键「打开」的绕过方式，只能这样点。
+3. **自己编**：`make build`，本机编译出的二进制没有 quarantine，直接能跑。
+
+Windows 同理：签名的 exe 才会让 SmartScreen 快速闭嘴，未签名的要么点
+「更多信息 → 仍要运行」，要么等下载量积累出信誉。
+
+彻底解决只有一条路：Apple Developer Program（99 美元/年）的 Developer ID 证书 + notarize。
+证书绑在你自己的 Team 下，私钥不能外借，所以只能你自己申请；申请下来后把证书和
+`APPLE_*` 密码存成 secrets，`release.yml` 里加回 `-sign` / 去掉 `-skip-notarize` 即可，
+`mygo` 会自动签名、公证、staple。Windows 侧可以先试
+[SignPath Foundation](https://signpath.org/)（对开源项目免费）或 Azure Trusted Signing（约 10 美元/月）。
+
 `.github/dependabot.yml` 每周检查 Go 依赖和 Actions 版本，并开一个 `chore:` / `ci:` 的 PR。
 
 ## 目录
@@ -95,14 +126,15 @@ scripts/             提交信息校验（hook 与 CI 共用）
 .github/workflows/   CI 与发布
 ```
 
-## 还没做，但发布前要定
+## 还没做
 
-- **identifier**：现在是 `io.github.fim98.clashgo`，一旦发布就不要再改（系统按它存偏好、权限、注册项）。
-- **签名**：目前是 ad-hoc 签名 / 无签名，别人下载会被 Gatekeeper、SmartScreen 拦。
-  有 Apple Developer ID 与 Windows 证书后，按 [distribution.md](https://github.com/egoist/mygo/blob/main/docs/distribution.md)
-  配置 `macos.signingIdentity`、`macos.notarize`、`windows.certificate`，再加 `MACOS_CERTIFICATE`、
-  `APPLE_*`、`WINDOWS_CERTIFICATE*` 这些 secrets。
-- **自动更新**：`go tool mygo keygen` 生成密钥，`mygo.json` 加 `updates`
-  （`publicKey` + `github`），把私钥放进 `MYGO_UPDATER_PRIVATE_KEY` secret，
-  然后把发布工作流里的 `gh release upload` 换成 `go tool mygo build ... -upload`，
-  就能带上 Ed25519 签名、delta 更新和 `install.sh` / `install.ps1` 一行安装。
+- **签名**：目前 macOS 是 ad-hoc 签名、Windows 无签名，靠上面的 `install.sh` 绕开
+  Gatekeeper。有证书后按 [distribution.md](https://github.com/egoist/mygo/blob/main/docs/distribution.md)
+  加 `macos.signingIdentity`、`macos.notarize`、`windows.certificate` 与
+  `MACOS_CERTIFICATE`、`APPLE_*`、`WINDOWS_CERTIFICATE*` 这些 secrets。
+- **应用内更新**：清单已经在发了，但 `main.go` 还没调 `mygo.Updater`；接上之后
+  应用能自己下载签名过的更新并替换自己。更新说明取自 `CHANGELOG.md` 里对应版本的
+  `## 0.1.0` 小节（文件一旦存在，每个版本都必须有这一节，否则构建会停）。
+- **更新私钥**：`~/Library/Application Support/mygo/update-keys/mygo-update.key`，
+  同时存在 GitHub secret 里。放进密码管理器备份：丢了就再也没法给已安装的用户发更新了。
+- **identifier**：`io.github.fim98.clashgo` 一旦发布就不要再改（系统按它存偏好、权限、注册项）。
