@@ -182,3 +182,9 @@ func TestManagerOwnsItsDirectory(t *testing.T) {
 		}
 	}
 }
+
+func TestVersion(t *testing.T) {
+	if v := Version(); v == "" || v == "unknown" {
+		t.Fatalf("Version() = %q, want the mihomo module version", v)
+	}
+}

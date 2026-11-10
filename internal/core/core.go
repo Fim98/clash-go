@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -158,6 +159,8 @@ func (m *Manager) Running() bool {
 // once a second for the window.
 type Status struct {
 	Running bool
+	// Version is the mihomo release the binary embeds, for the dashboard.
+	Version string
 	// Since is when the core started, zero when it does not run.
 	Since time.Time
 	// Mode is ModeRule, ModeGlobal or ModeDirect.
@@ -179,9 +182,11 @@ func (m *Manager) Status() Status {
 	st := Status{Running: m.running, Since: m.since}
 	m.mu.Unlock()
 	if !st.Running {
+		st.Version = Version()
 		return st
 	}
 
+	st.Version = Version()
 	st.Mode = modeName()
 	st.Up, st.Down = statistic.DefaultManager.Now()
 	st.UpTotal, st.DownTotal = statistic.DefaultManager.Total()
@@ -190,6 +195,22 @@ func (m *Manager) Status() Status {
 		st.Memory = snap.Memory
 	}
 	return st
+}
+
+// Version is the mihomo release this build embeds. mihomo's own
+// constant.Version is not kept in step with releases, so read the module
+// version the linker recorded instead.
+func Version() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "unknown"
+	}
+	for _, dep := range info.Deps {
+		if dep.Path == "github.com/metacubex/mihomo" {
+			return strings.TrimPrefix(dep.Version, "v")
+		}
+	}
+	return "unknown"
 }
 
 // SetMode switches between ModeRule, ModeGlobal and ModeDirect, as the
